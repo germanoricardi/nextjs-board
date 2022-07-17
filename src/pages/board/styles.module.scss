@@ -1,0 +1,114 @@
+.container {
+  background-color: #17181F;
+  border-radius   : 7px;
+  margin          : 2rem auto;
+  max-width       : 1120px;
+  padding         : 2rem;
+
+  form {
+    align-items    : center;
+    display        : flex;
+    justify-content: center;
+
+    input {
+      background-color: #20212C;
+      border          : 1px solid #424242;
+      border-radius   : 7px;
+      color           : #FFFFFF;
+      height          : 50px;
+      padding         : 3px 10px;
+      width           : 90%;
+    }
+
+    button {
+      background-color: #FFB800;
+      border          : 0;
+      border-radius   : 7px;
+      height          : 50px;
+      margin-left     : 2%;
+      width           : 8%;
+    }
+  }
+
+  h1 {
+    color     : #FFFFFF;
+    margin-top: 1.8rem;
+  }
+
+  .taskList {
+    background-color: #20212C;
+    border-radius   : 7px;
+    margin          : 1rem 0;
+    padding         : .7rem;
+
+    p {
+      color     : #F2F6FC;
+      cursor    : pointer;
+      font-size : 1rem;
+      list-style: 150%;
+    }
+
+    .actions {
+      display        : flex;
+      flex-direction : row;
+      justify-content: space-between;
+      margin-top     : 1rem;
+      width          : 100%;
+
+      div {
+        align-items    : center;
+        display        : flex;
+        justify-content: center;
+
+        time {
+          color       : #FFB800;
+          margin-left : 5px;
+          margin-right: 1rem;
+        }
+      }
+
+      button {
+        align-items    : center;
+        background     : transparent;
+        border         : 0;
+        display        : flex;
+        justify-content: center;
+
+        & + button { margin-left: 10px; }
+
+        span {
+          color      : #FFFFFF;
+          cursor     : pointer;
+          margin-left: 5px;
+
+          &:hover { filter: brightness(.7); }
+        }
+      }
+    }
+  }
+}
+
+.vipContainer {
+  background-color: #17181F;
+  border-radius   : 7px;
+  margin          : 1rem auto;
+  max-width       : 1120px;
+  padding         : 1rem;
+
+  h3 {
+    color    : #FFB800;
+    font-size: 2rem;
+  }
+
+  div {
+    align-items: center;
+    display    : flex;
+    margin-top : 1rem;
+
+    time {
+      color    : #FFFFFF;
+      font-size: 1.4rem;
+      padding  : 10px;
+    }
+  }
+}
