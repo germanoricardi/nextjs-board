@@ -8,16 +8,14 @@ import { FiX } from 'react-icons/fi'
 
 export function SignInButton() {
   const { data: session } = useSession();
-
-  // const session = 0;
-
+  
   return session ? (
     <button
       type='button'
       className={styles.signInButton}
       onClick={ () => signOut() }
     >
-      <img src="https://sujeitoprogramador.com/steve.png" alt="Germano Ricardi" />
+      <img src={session.user.image} alt="Germano Ricardi" />
       Olá Germano
       <FiX color='#737380' className={styles.closeIcon} />
     </button>

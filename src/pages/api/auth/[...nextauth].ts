@@ -10,4 +10,31 @@ export default NextAuth({
     }),
   ],
 
+  callbacks: {
+    async session({ session, token, user }) {
+      try {
+        return {
+          ...session,
+          id: token.jti
+        }
+      } catch (error) {
+        return {
+          ...session,
+          id: null
+        }
+      }
+    },
+
+    async signIn({ user, account, profile }) {
+      const { email } = user;
+
+      try {
+        return true;
+      } catch (error) {
+        console.log('DEU ERRO', error);
+        return false;
+      }
+    }
+  }
+
 })
