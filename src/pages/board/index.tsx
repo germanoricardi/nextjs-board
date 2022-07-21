@@ -6,19 +6,32 @@ import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 
-import { collection, addDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, getFirestore } from 'firebase/firestore'
 
 import { app, database } from '../../services/firebaseConnection'
+import { format } from 'date-fns'
+import Link from 'next/link'
+
+type TaskList = {
+  id: string;
+  created: string | Date;
+  createdFormated?: string;
+  tarefa: string;
+  userId: string;
+  nome: string;
+}
 
 interface BoardProps {
   user: {
     id: string;
     nome: string;
-  }
+  };
+  data: string;
 }
 
-export default function Board({ user }: BoardProps) {
+export default function Board({ user, data }: BoardProps) {
   const [input, setInput] = useState('');
+  const [taskList, setTaskList] = useState<TaskList[]>(JSON.parse(data));
 
   async function handleSubmitTask(e: FormEvent) {
     e.preventDefault();
@@ -35,10 +48,44 @@ export default function Board({ user }: BoardProps) {
       nome: user.nome
     })
     .then((doc) => {
-      console.log('CADASTRADO COM SUCESSO!')
+      console.log('CADASTRADO COM SUCESSO!');
+
+      let data = {
+        id             : doc.id,
+        created        : new Date(),
+        createdFormated: format(new Date(), 'dd MMMM yyyy'),
+        tarefa         : input,
+        userId         : user.id,
+        nome           : user.nome
+      };
+
+      setTaskList([...taskList, data]);
+      setInput('');
     })
     .catch((err) => {
       console.log('ERRO AO CADASTAR: ', err)
+    })
+  }
+
+  async function handleDelete(id: string) {
+    const dbInstance = collection(database, 'tarefas');
+
+    const db = getFirestore(app)
+
+    let _doc = doc(db, 'tarefas', id );
+
+    await deleteDoc(_doc)
+    .then((data) => {
+      console.log('DELETADO COM SUCESSO!', data);
+      
+      let taskDeleted = taskList.filter( item => {
+        return (item.id != id);
+      })
+
+      setTaskList(taskDeleted);
+    })
+    .catch((err) => {
+      console.error(err);
     })
   }
 
@@ -64,33 +111,37 @@ export default function Board({ user }: BoardProps) {
 
         </form>
 
-        <h1>Você tem 7 tarefas!</h1>
+        <h1>Você tem {taskList.length} {taskList.length == 1 ? 'tarefa' : 'tarefas'}!</h1>
 
         <section>
-          <article className={styles.taskList}>
-            <p>Aprender criar projetos usando NextJS e aplicando firebase como back.</p>
+          {taskList.map( (task, k) => (
+            <article key={k} className={styles.taskList}>
+              <Link href={`/board/${task.id}`}>
+                <p>{task.tarefa}</p>
+              </Link>
 
-            <div className={styles.actions}>
-              
-              <div>
+              <div className={styles.actions}>
+                
                 <div>
-                  <FiCalendar size={20} color='#FFB800' />
-                  <time>17 de Julho de 2022</time>
+                  <div>
+                    <FiCalendar size={20} color='#FFB800' />
+                    <time>{task.createdFormated}</time>
+                  </div>
+
+                  <button>
+                    <FiEdit2 size={20} color='#FFFFFF' />
+                    <span>Editar</span>
+                  </button>
                 </div>
 
-                <button>
-                  <FiEdit2 size={20} color='#FFFFFF' />
-                  <span>Editar</span>
+                <button onClick={() => handleDelete(task.id)}>
+                  <FiTrash size={20} color='#FF3636' />
+                  <span>Excluir</span>
                 </button>
+
               </div>
-
-              <button>
-                <FiTrash size={20} color='#FF3636' />
-                <span>Excluir</span>
-              </button>
-
-            </div>
-          </article>
+            </article>
+          ))}
         </section>
       </main>
 
@@ -110,6 +161,7 @@ export default function Board({ user }: BoardProps) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const session = await getSession({ req });
+  const dbInstance = collection(database, 'tarefas');
 
   if(!session?.id) {
     return {
@@ -120,6 +172,18 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     }
   }
 
+  const q = query((dbInstance), where('nome', '==', session.user.name));
+
+  const tasks = await getDocs(q);
+
+  const data = JSON.stringify(tasks.docs.map(u => {
+    return {
+      id: u.id,
+      createdFormated: format(u.data().created.toDate(), 'dd MMMM yyyy'),
+      ...u.data()
+    }
+  }))
+
   const user = {
     nome: session?.user.name,
     id: session?.id
@@ -127,7 +191,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 
   return {
     props: {
-      user
+      user,
+      data
     }
   }
 }
