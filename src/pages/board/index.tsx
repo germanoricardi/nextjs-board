@@ -2,11 +2,11 @@ import { GetServerSideProps } from 'next'
 import { getSession } from 'next-auth/react'
 import Head from 'next/head'
 import { FormEvent, useState } from 'react'
-import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
+import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash, FiX } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc, getFirestore } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, getFirestore, updateDoc } from 'firebase/firestore'
 
 import { app, database } from '../../services/firebaseConnection'
 import { format } from 'date-fns'
@@ -33,11 +33,33 @@ export default function Board({ user, data }: BoardProps) {
   const [input, setInput] = useState('');
   const [taskList, setTaskList] = useState<TaskList[]>(JSON.parse(data));
 
+  const [taskEdit, setTaskEdit] = useState<TaskList | null>(null);
+
   async function handleSubmitTask(e: FormEvent) {
     e.preventDefault();
 
     if(input === '')
       return alert('Preencha alguma tarefa!');
+    
+    if(taskEdit) {
+      const db = getFirestore(app);
+
+      let _doc = doc(db, 'tarefas', taskEdit.id );
+      await updateDoc(_doc, {tarefa: input})
+      .then(() => {
+        let data = taskList;
+        let taskIndex = data.findIndex(item => item.id === taskEdit.id);
+        data[taskIndex].tarefa = input;
+
+        setTaskList(data);
+        handleCancelEdit();
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+
+      return;
+    }
 
     const dbInstance = collection(database, 'tarefas');
 
@@ -68,7 +90,6 @@ export default function Board({ user, data }: BoardProps) {
   }
 
   async function handleDelete(id: string) {
-    const dbInstance = collection(database, 'tarefas');
 
     const db = getFirestore(app)
 
@@ -89,6 +110,16 @@ export default function Board({ user, data }: BoardProps) {
     })
   }
 
+  function handleEditTask(task: TaskList) {
+    setTaskEdit(task);
+    setInput(task.tarefa);
+  }
+
+  function handleCancelEdit() {
+    setInput('');
+    setTaskEdit(null);
+  }
+
   return(
     <>
       <Head>
@@ -96,6 +127,16 @@ export default function Board({ user, data }: BoardProps) {
       </Head>
 
       <main className={styles.container}>
+
+        {taskEdit && (
+          <span className={styles.warnText}>
+            <button onClick={handleCancelEdit}>
+              <FiX size={30} color="#FF3636" />
+            </button>
+            Você está editando uma tarefa!
+          </span>
+        )}
+
         <form onSubmit={handleSubmitTask}>
           
           <input
@@ -128,7 +169,7 @@ export default function Board({ user, data }: BoardProps) {
                     <time>{task.createdFormated}</time>
                   </div>
 
-                  <button>
+                  <button onClick={() => handleEditTask(task)}>
                     <FiEdit2 size={20} color='#FFFFFF' />
                     <span>Editar</span>
                   </button>
