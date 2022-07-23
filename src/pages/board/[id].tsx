@@ -2,7 +2,11 @@ import { format } from "date-fns";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { GetServerSideProps } from "next"
 import { getSession } from "next-auth/react"
+import Head from "next/head";
+import { FiCalendar } from "react-icons/fi";
 import { app } from "../../services/firebaseConnection";
+
+import styles from './task.module.scss';
 
 type Task = {
   id              : string,
@@ -20,9 +24,21 @@ interface TaskListProps {
 export default function Task({ data }: TaskListProps) {
   const task = JSON.parse(data) as Task;
   return(
-    <div>
-      <h1>{task.tarefa}</h1>
-    </div>
+    <>
+      <Head>
+        <title>Detalhes da sua tarefa</title>
+      </Head>
+      <article className={styles.container}>
+        <div className={styles.actions}>
+          <div>
+            <FiCalendar size={30} color="#FFFFFF" />
+            <span>Tarefa criada: </span>
+            <time>{task.createdFormated}</time>
+          </div>
+        </div>
+        <p>{task.tarefa}</p>
+      </article>
+    </>
   )
 }
 
