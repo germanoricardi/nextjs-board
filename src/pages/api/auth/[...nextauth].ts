@@ -15,7 +15,7 @@ export default NextAuth({
       try {
         return {
           ...session,
-          id: token.jti
+          id: token.email
         }
       } catch (error) {
         return {
